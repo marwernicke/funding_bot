@@ -1,2 +1,2 @@
-API_KEY='QvjlxWMsJi7Sf1mD335qecVTDQBHeZBiVYxiqLsdYKg'
-API_SECRET='xErtLXpzPWktAPbkwJeJL7wdP2bNkWm50ezfGqll6Ck'
+API_KEY=''
+API_SECRET=''
