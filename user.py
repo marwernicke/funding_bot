@@ -28,7 +28,7 @@ class user():
 
 
 
-marcos = user('QvjlxWMsJi7Sf1mD335qecVTDQBHeZBiVYxiqLsdYKg','xErtLXpzPWktAPbkwJeJL7wdP2bNkWm50ezfGqll6Ck')
+marcos = user('','')
 @marcos.bfx.ws.on('all')
 def log_updates(data):
     #listener.all(data)
