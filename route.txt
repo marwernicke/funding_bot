@@ -1,0 +1,1 @@
+cd ../../Users/matias/Documents/-/ML/git/funding_bot
