@@ -1,10 +1,17 @@
+document_data = {
+                 'author': 'checho651',
+                 'name': 'conection_test.py',
+                 'description': 'Short sctipt to test mongo_db_conection',
+                 'version': '1.0.0'
+                 }
+
 import pandas as pd
-import pymongo 
+import pymongo
 from datetime import datetime, timedelta
 import mongo_db_conection_rAC as mdbc
 
 
-#Creates a pymongo.MongoClient in order to get access to de databases available. 
+#Creates a pymongo.MongoClient in order to get access to de databases available.
 mongo_user = 'FundingBot'
 mongo_password = 'Funding3575'
 mongo_client = mdbc.mongo_db_conection(mongo_user, mongo_password, mg_user_info = True)
@@ -23,7 +30,7 @@ new_user_data = {
                 'is_active': 0,
                 'earnings': 0,
                 'current_amount': 0
-                } 
+                }
 
 new_offer_data = {
                   'id_offer': 100000,
@@ -34,7 +41,7 @@ new_offer_data = {
                   'per': 30,
                   'rate': 0.003,
                   'closed_date': 0,
-                  'was_executed': 0,   
+                  'was_executed': 0,
                   }
 
 new_credit_data = {
@@ -47,11 +54,3 @@ new_credit_data = {
                    'from_offer': 125626,
                    'end_date': 0,
                     }
-    
-
-
-
-
-
-
-
