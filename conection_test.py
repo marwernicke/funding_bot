@@ -8,7 +8,7 @@ document_data = {
 import pandas as pd
 import pymongo
 from datetime import datetime, timedelta
-import mongo_db_conection_rAC as mdbc
+import mongo_db_conection as mdbc
 
 
 #Creates a pymongo.MongoClient in order to get access to de databases available.
