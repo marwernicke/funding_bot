@@ -1,123 +1,181 @@
+#Document information
 document_data = {
                  'author': 'checho651',
                  'name': 'mongo_db_conection.py',
                  'description': '''Creates a mongo conection class with Methods
                                     to update data easily to each Bot_user''',
-                 'version': '1.0.0'
+                 'version': '2.0.0'
                  }
 
-
-import pandas as pd
+#Needed packages
 import pymongo
-from datetime import datetime
 
 class Bot_user:
     """
     Before creating an instance of the class, user need to be registered in
-    proyect "FundingBot", database "funding_bot", collection 'users_data' as
+    proyect "FundingBot", database "funding_bfx", collection 'users' as
     a document.
     If client is not registered it returns None.
     """
-    def __init__(self, client: pymongo.MongoClient, user_dni: int):
+    def __init__(self, client: pymongo.MongoClient, user_uid: int):
         """
-        Gets the data of the user from users_data document.
+        Gets the data of the user from 'users' collection.
         """
-        self.client = client
-        self.user_dni = user_dni
+        self.client = client        
+        self.user_uid = user_uid
         #Checks if conection was successful, gets client data form users_data
         try:
-            self.col_data = self.client.funding_users.users_data
-            self.user_data = self.col_data.find_one({'dni': self.user_dni})
+            #Collection where user data is stored.
+            self.col_data = self.client.funding_bfx.users
+            self.user_data = self.col_data.find_one({'uid': self.user_uid})
+           
+            #User attributes
+            self._id = self.user_data['_id']
             self.name = self.user_data['name']
             self.surname = self.user_data['surname']
-            self.dni = self.user_data['dni']
+            self.user_name = self.user_data['user_name']
+            self.uid = self.user_data['uid']
             self.API_key = self.user_data['API_key']
             self.API_secret = self.user_data['API_secret']
-            self.start_date = self.user_data['start_date']
+            self.timestamp = self.user_data['timestamp']
             self.start_amount = self.user_data['start_amount']
+            
             #Database and collections name where historical data is stored.
-            self.db_records_name = self.user_data['data_base']
-            self.db_records = self.client[self.db_records_name]
-            self.col_wallet = self.db_records['wallet']
+            self.db_records = self.client.funding_bfx
+            self.col_wallets = self.db_records['walletSnapshots']
             self.col_offers = self.db_records['offers']
             self.col_credits = self.db_records['credits']
+
         except:
-            self.col_data = None
-            self.user_data = None
-            self.name = None
-            self.surname = None
-            self.dni = None
-            self.API_key = None
-            self.API_secret = None
-            self.start_date = None
-            self.start_amount = None
-            self.db_records_name = None
-            self.db_records = None
-            self.col_wallet = None
-            self.col_offers = None
-            self.col_credits = None
-            print('User :',self.user_dni, 'not found')
+            print('User :',self.user_uid, 'not found')
 
     ##Methods associated with the class
     def update (self):
         """
         Method to update modified values from database by other functions.
         """
-        self.__init__(self.client, self.user_dni)
+        self.__init__(self.client, self.user_uid)
 
     #Status info methods.
     def is_active(self):
-        return self.col_data.find_one({'dni': self.user_dni})['is_active']
-
+        try:
+            return self.col_data.find_one({'uid': self.user_uid})['is_active']
+        except:
+            print('Conection with database failed')
+        
+    def coins(self):
+        try:
+            return self.col_data.find_one({'uid': self.user_uid})['coins']
+        except:
+            print('Conection with database failed')
+            
     def earnings(self):
-        return self.col_data.find_one({'dni': self.user_dni})['earnings']
-
+        try:
+            agg_query = [{'$match': {'uid': self.uid}},
+             {'$group': {'_id': '$coin', 'total': {'$sum': '$earnings'}}}]
+            #Receive a list of dictionaries with each sum.
+            total_list = list(self.col_offers.aggregate(agg_query))
+            return total_list
+        except:
+            print('Conection with database failed')
+            
     def current_amount(self):
-        return self.col_data.find_one({'dni': self.user_dni})['current_amount']
+        try:
+            return self.col_data.find_one({'uid': self.user_uid})['current_amount']
+        except:
+            print('Conection with database failed')
+            
+    def update_one(self, coin = '', **kwargs):
+        """        
+        Parameters
+        ----------
+        coin : str
+            Currency symbol. Only accepts one value as string.
+        **kwargs : TYPE
+            Can update any value from users document. 
 
-    def update_one(self, **kwargs):
+        Updates values from users document.
+
+        Returns
+        -------
+        None.
+        """
         try:
             for key, value in kwargs.items():
-                self.col_data.update_one({'dni': self.dni},
+                self.col_data.update_one({'uid': self.uid},
                             {"$set":
                                 {key: value}
                             }
                                    )
+            if coin:
+                if coin in self.coins():
+                    print(f'Coin {coin} already exists')
+                else:
+                    self.col_data.update_one({'uid': self.uid},
+                                                {"$push":
+                                                    {'coins': coin}
+                                                }
+                                             )                
         except:
             print('Update could not be performed')
 
     #Wallet methods.
     def wallet_info (self):
-        wallet_list = list(self.col_wallet.find({}))
-        print(wallet_list)
-        return wallet_list
-
-    def new_currency (self, symbol: str, description: str, start_amount = 0):
-        if self.col_wallet.find_one({'symbol': symbol}):
-            print('Currency already exists')
-        else:
-            new_currency (col = self.col_wallet, symbol = symbol, description = description,
-                          start_amount = start_amount)
-
-    def available (self, symbol: str):
+        "Returns a dictionary with las walletSnapshot for each coin in user coins"
+        wallet_dict = dict()
         try:
-            if self.col_wallet.find_one({'symbol': symbol}):
-                available = self.col_wallet.find_one({'symbol': symbol})['available_' + symbol]
-                print('available_' + symbol + ':', available)
-                return available
+            for coin in self.coins():
+                last_update = self.col_wallets.find_one({'uid': self.uid, 'currency': coin},
+                                                        sort = [('timestamp', -1)])
+                if last_update:
+                    wallet_dict[coin] = {'amount': last_update['amount'],
+                                           'available': last_update['available']}
+                else:
+                    wallet_dict[coin] = {'amount': 0, 'available': 0}
+        except:
+            print('Conection failed')
+            
+        return wallet_dict
+
+    def new_wallet_snapshot (self, doc_data :dict):         
+        try:
+            doc_data['uid'] = self.uid
+            if doc_data['currency'] not in self.coins():
+                print('Currency is not available in coins, it will be added')
+                self.update_one(coin = doc_data['currency'])
+                print('Currency added to coins successfully')
+            
+            new_wallet_snapshot (col = self.col_wallets, doc_data = doc_data)
+        except:
+            print('Conection failed')
+            
+    def available (self, currency: str):
+        try:
+            wallet = self.wallet_info()
+            if currency in wallet:
+                available = wallet[currency]['available']
             else:
-                print('Currency not found')
+                print(f'Currency {currency} is not active')
+                available = 0
+            return available
         except:
             print('Could not access wallet information')
 
-    def update_wallet (self, symbol: str, new_amount: int):
-        if self.col_wallet.find_one({'symbol': symbol}):
-            update_wallet(col = self.col_wallet, symbol = symbol, new_amount = new_amount)
-        else:
-            print(f'Currency does not exists in {self.name} {self.surname} wallet')
+    def amount (self, currency: str):
+        try:
+            wallet = self.wallet_info()
+            if currency in wallet:
+                available = wallet[currency]['amount']
+            else:
+                print(f'Currency {currency} is not active')
+                available = 0
+            return available
+        except:
+            print('Could not access wallet information')
 
     #Offers methods.
     def new_offer (self, offer_data: dict):
+        offer_data['uid'] = self.uid
         new_offer(self.col_offers, offer_data)
 
     def offer_status(self, id_offer: int):
@@ -136,6 +194,7 @@ class Bot_user:
 
     #Credits methods.
     def new_credit (self, credit_data: dict):
+        credit_data['uid'] = self.uid
         new_credit(self.col_credits, credit_data)
 
     def credit_status(self, id_credit: int):
@@ -154,14 +213,28 @@ class Bot_user:
 #General functions.
 def mongo_db_conection (mongo_user: str, mongo_password: str,
                         mg_user_info = False) -> pymongo.MongoClient:
-    """
-    Recieve mongo data base proyect name and password.
+    """    
+    Parameters
+    ----------
+    mongo_user : str
+    mongo_password : str
+    mg_user_info : TYPE, optional
+        The default is False.
+    
+    Conects to 'FundingBot' cluster by user and password.
+    Recieve mongo user and password from connection method 'Connect to your aplication'.
     Returns instance of a class MongoClient.
     Prints a list of databases available and collections if mg_user_info = True.
+            
+    Returns
+    -------
+    client : pymongo.MongoClient
+    If connection fails, it returns NoneType object.
     """
-    #If connection fails, it returns NoneType object.
+
     try:
-        client = pymongo.MongoClient("mongodb+srv://FundingBot:{}@fundingbot-ncgso.mongodb.net/{}?retryWrites=true&w=majority".format(mongo_password,mongo_user))
+        #Connection string generated to get access to 'FundingBot' cluster.
+        client = pymongo.MongoClient("mongodb+srv://FundingBot:{}@fundingbot-bnota.mongodb.net/{}?retryWrites=true&w=majority".format(mongo_password,mongo_user))
         if mg_user_info:
             list_db_available = client.list_database_names()
             print(f'Data bases available in \"{mongo_user}\" = ', list_db_available)
@@ -173,15 +246,30 @@ def mongo_db_conection (mongo_user: str, mongo_password: str,
     except:
         client = None
         print('Conection Failed, return = None')
+        print('')
 
     return client
 
 def insert_document (client: pymongo.MongoClient, db_name: str,
-                     coll_name :str, doc_data :dict):
+                     col_name :str, doc_data :dict):
+    """   
+    Parameters
+    ----------
+    client : pymongo.MongoClient
+    db_name : str
+    col_name : str
+    doc_data : dict
+    
+    Inserts doc_data in client.db_name.col_name.
+
+    Returns
+    -------
+    None.
+    """
     try:
         db = client[db_name]
-        coll = db[coll_name]
-        coll.insert_one(doc_data)
+        col = db[col_name]
+        col.insert_one(doc_data)
         print('Document inserted successfully')
         print('')
     except:
@@ -189,60 +277,55 @@ def insert_document (client: pymongo.MongoClient, db_name: str,
         print('')
 
 def new_bot_user (client: pymongo.MongoClient, user_data: dict):
-    """Creates new document in db = 'user_name' + 'id_user', coll = 'users_data'
-       with new user data.
-       Crete empty collections 'wallet', 'offers' and 'credits'.
+    """
+    Parameters
+    ----------
+    client : pymongo.MongoClient
+    user_data : dict
+        Dictionary with keys: ['name', 'surname', 'user_name', 'uid', 'API_key',
+                               'API_secret', 'coins', 'timestamp', 'is_active',
+                               'start_amount', 'earnings', 'current_amount']
+    
+    Creates new document in db = 'funding_bfx', col = 'users' 
+    with new user data.
+        
+    Returns
+    -------
+    None.
+
     """
     try:
-        #Define the database name with user_data values.
-        db_name = user_data['name'][0:2] + user_data['surname'][0:1] + '_' + str(user_data['dni'])[-3:]
-        user_data['data_base'] = db_name
         #Checks if client already exists.
-        if client.funding_users.users_data.find_one({'dni': user_data['dni']}):
-            print('User already exists')
+        if client.funding_bfx.users.find_one({'uid': user_data['uid']}):
+            uid = user_data['uid']
+            print(f'User with uid: {uid} already exists')
+            print('')
             return
         else:
             print('Inserting new user data in users_data')
-            insert_document(client, 'funding_users', 'users_data', user_data)
+            insert_document(client, 'funding_bfx', 'users', user_data)
     except:
         print('New user could not be created')
+        print('')
 
-def new_currency (col: pymongo.collection, symbol: str, description: str,
-                  start_amount = 0):
+def new_wallet_snapshot (col: pymongo.collection, doc_data :dict):
     """
-    Creates document in user collection 'wallet'.
-    """
-    try:
-        #Search if document with symbol already exists.
-        if col.find_one({'symbol': symbol}):
-            print(f'Currency {symbol} already exists')
-        else:
-            available_symbol = 'available_' + symbol
-            col.insert_one({'symbol': symbol,
-                            'description': description,
-                            available_symbol: start_amount})
-    except:
-        print('Currency could not be created')
+    Parameters
+    ----------
+    col : pymongo.collection
+        Collection where wallets snapshots are being store.
+    doc_data : dict
+        Dictionary with keys: ['uid', 'timestamp', 'currency', 'amount',
+                               'available', 'rate_curr_usd']
 
-def update_wallet (col: pymongo.collection, symbol: str, new_amount: int):
-    """
-    Updates wallet information in user collection 'wallet'.
-    If currency doesn't exists, prints error message.
-    """
+    Returns
+    -------
+    None.
+    """        
     try:
-        if col.find_one({'symbol': symbol}):
-            data_dir = 'available' + '_' + symbol
-            #Wallet is document with id = 1 in collection 'user name' + 'id_user'
-            col.update_one({'symbol': symbol},
-                                {"$set":
-                                    {data_dir:
-                                         new_amount}
-                                }
-                           )
-        else:
-            print('Currency does not exist')
+        col.insert_one(doc_data)
     except:
-        print('Wallet could not be updated')
+        print('Snapshot could not be saved')
 
 def new_offer (col: pymongo.collection, offer_data: dict):
     """
@@ -250,11 +333,7 @@ def new_offer (col: pymongo.collection, offer_data: dict):
     """
     try:
         #Search if offer with id_offer already exists.
-        offer_id = offer_data['id_offer']
-        if col.find_one({'id_offer': offer_id}):
-            print(f'Offer {offer_id} already exists')
-        else:
-            col.insert_one(offer_data)
+        col.insert_one(offer_data)
     except:
         print('Offer could not be saved')
 
@@ -273,7 +352,6 @@ def offer_status (col: pymongo.collection, id_offer: int):
         print('Offer not found')
         status ('Not_Found', 'Not_found')
     return status
-
 
 def change_offer_status (col: pymongo.collection, id_offer: int,
                          closed_date = None, was_executed = None):
@@ -307,12 +385,7 @@ def new_credit (col: pymongo.collection, credit_data: dict):
     Saves credit data in collection specified.
     """
     try:
-        #Search if offer with id_offer already exists.
-        credit_id = credit_data['id_credit']
-        if col.find_one({'id_credit': credit_id}):
-            print(f'Credit {credit_id} already exists')
-        else:
-            col.insert_one(credit_data)
+        col.insert_one(credit_data)
     except:
         print('Credit could not be saved')
 
