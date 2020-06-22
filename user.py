@@ -8,6 +8,7 @@ from client_functions import snapshot
 class user():
     def __init__(self, user_name, API_KEY,  API_SECRET, coins):
         self.user_name = user_name
+        self.id = user_name
         self.bfx = conect(API_KEY, API_SECRET)
         self.coins = coins
         self.wallets = {}
