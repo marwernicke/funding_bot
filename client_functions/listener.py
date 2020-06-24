@@ -1,6 +1,19 @@
+#Document information
+document_data = {
+                 'author': 'marwernicke',
+                 'name': 'listener.py',
+                 'description': 'Recieve user notificatinons from bfx',
+                 'version': '1.0.0',
+                 'new_update': 'checho651 conection to monogodb'
+                 }
+
+#Needed packages
+import time
+#pip install pymongo & pip install pymongo[srv] needed for web clusters.
+import pymongo
+
 # my files
 from Strategies import manager
-import time
 
 async def all(notification, user):
     if type(notification) == list:
@@ -20,10 +33,13 @@ async def all(notification, user):
                 user.offers[offer_id]['closed_date'] = closed_date
                 user.offers[offer_id]['was_executed'] = was_executed
                 print('_#_ ORDER CANCELED {}'.format(user.offers[offer_id]))
-                #### CHEHCO #### UPDATE ORDER TO DATA BASE
+                #Connection to data base, order document updated in 'orders' collection.
+                user.mongo_user.change_offer_status(offer_id = offer_id,
+                                                    closed_date = closed_date,
+                                                    was_executed = was_executed)
                 del user.offers[offer_id]
 
-        if notification[1] == 'fon': #funding offer notification (new order place)
+        if notification[1] == 'fon': #funding offer new (new order place)
             user_id = user.id
             offer_id = notification[2][0]
             fcoin = notification[2][1]
@@ -33,7 +49,8 @@ async def all(notification, user):
             per = notification[2][15]
             user.offers[offer_id] =  {'user_id': user_id, 'offer_id': offer_id, 'coin':fcoin, 'creation_date': creation_date, 'amount':amount, 'rate':rate, 'per': per,'closed_date': 0, 'was_executed':0 }
             print('_#_ NEW ORDER PLACED {}'.format(user.offers[offer_id]))
-            #### CHEHCO #### NEW ORDER TO DATA BASE
+            #Connection to data base, new order document in 'orders' collection.
+            user.mongo_user.new_offer(user.offers[offer_id])
 
         if notification[1] == 'fcc': #funding credit closed
             user_id = user.id
@@ -47,7 +64,12 @@ async def all(notification, user):
                 user.credits[credit_id]['end_date'] = end_date
                 user.credits[credit_id]['earn_money'] = earn_money
                 user.credits[credit_id]['piad_fees'] = piad_fees
-                #### CHEHCO #### UPDATE CREDIT TO DATA BASE
+                #Connection to data base, credit document updated in 'credits' collection.
+                "Is better instead of updating to create a new document?"
+                user.mongo_user.change_offer_status(credit_id = credit_id,
+                                                    end_date = end_date,
+                                                    earn_money = earn_money,
+                                                    paid_fees = paid_fees)
                 del user.credits[credit_id]
 
         if notification[1] == 'fcn': #funding credit new
@@ -60,7 +82,8 @@ async def all(notification, user):
             per = notification[2][12]
             user.credits[credit_id] =  {'user_id': user_id, 'credit_id':credit_id, 'coin':fcoin, 'creation_date': creation_date, 'amount':amount, 'rate':rate, 'per': per, 'end_date':0, 'earn_money':0, 'piad_fees':0}
             print('_#_ FUNDING CREDIT NEW {}'.format(user.credits[credit_id]))
-            #### CHEHCO #### NEW CREDIT TO DATA BASE
+            #Connection to data base, new credit document in 'credits' collection.
+            user.mongo_user.new_credit(user.offers[credit_id])
 
         if notification[1] == 'wu': #wallet update
             user_id = user.id
@@ -75,7 +98,18 @@ async def all(notification, user):
             else: #if coin not in users wallets the coin is added to the wallets
                 user.wallets[coin] = {format : {} }
                 user.wallets[coin][format] = {'balance':balance, 'available':available }
+                #Conection to data base. Coin added to data base users document.
+                user.mongo_user.update_one(coin = coin)
             print('_#_ {} WALLET UPDATE {}'.format(coin, user.wallets[coin]))
-            #### CHEHCO #### WALLET TO DATA BASE
+            #Connection to data base, new wallet snapshot in 'walletSnapshots' collection.
+            new_wu_data = {
+                           'timestamp': time.time()*1000,
+                           'currency': coin,
+                           'balance': balance,
+                           'available': 100,
+                           'rate_curr_usd': 1,
+                           'format': format
+                            }
+            user.mongo_user.new_wallet_snapshot(doc_data = new_wu_data)
             if (coin in user.coins) & (format == "funding") & (available > 50):
                 await manager.balance_available(user,coin, available)
