@@ -38,8 +38,8 @@ async def all(notification, user):
         if notification[1] == 'fcc': #funding credit closed
             user_id = user.id
             credit_id = notification[2][0]
-            start_date = notification[2][3]
-            end_date = notification[2][4]
+            start_date = notification[2][13]
+            end_date = notification[2][14]
             rate = notification[2][11]
             earn_money = (end_date - start_date) * (rate / 24* 60* 60 * 1000) * 0.85
             piad_fees = earn_money/0.85*0.15
@@ -54,7 +54,7 @@ async def all(notification, user):
             user_id = user.id
             credit_id = notification[2][0]
             fcoin = notification[2][1]
-            creation_date = notification[2][3]
+            creation_date = notification[2][13]
             amount = notification[2][5]
             rate = notification[2][11]
             per = notification[2][12]
