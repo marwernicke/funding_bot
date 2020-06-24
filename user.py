@@ -16,7 +16,3 @@ class user():
 
         #run user bot
         self.bfx.ws.run()
-
-    async def cancel_all_offers(self):
-        await orders.cancel_all_offers(self)
-        print(self.offers)
