@@ -43,6 +43,12 @@ def run(user):
     print_user_data(user)
 
 ########### Running starts here ###########
+#Creates a pymongo.MongoClient in order to get access to de databases available.
+#The connection is with a web cluster. All users connect to same MongoClient.
+mg_user = mongo_user
+mg_password = mongo_password
+mongo_client = mdbc.mongo_db_conection(mg_user, mg_password, mg_user_info = True)
+
 test = user('Test_758', TEST_API_KEY, TEST_API_SECRET, ['USD'],
             uid = 36363636, mongo_client = mongo_client)
 marcos = user('Mars_859', API_KEY, API_SECRET, ['USD'],
@@ -50,12 +56,6 @@ marcos = user('Mars_859', API_KEY, API_SECRET, ['USD'],
             
 for user in users:
     run(user)
-
-#Creates a pymongo.MongoClient in order to get access to de databases available.
-#The connection is with a web cluster. All users connect to same MongoClient.
-mg_user = mongo_user
-mg_password = mongo_password
-mongo_client = mdbc.mongo_db_conection(mg_user, mg_password, mg_user_info = True)
 
 # runs loop for hourly cancel
 loop = sched.scheduler(time.time, time.sleep)
