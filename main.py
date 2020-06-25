@@ -1,12 +1,3 @@
-#Document information
-document_data = {
-                 'author': 'marwernicke',
-                 'name': 'main.py',
-                 'description': 'Main script, runs the funding bot',
-                 'version': '1.0.0',
-                 'new_update': 'checho651 conection to monogodb'
-                 }
-
 #Needed packages
 import asyncio
 from datetime import datetime as dt
