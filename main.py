@@ -1,12 +1,18 @@
+#Needed packages
+import asyncio
 from datetime import datetime as dt
 import time
 import sched
 import asyncio
+#pip install pymongo & pip install pymongo[srv] needed for use of web clusters.
+import pymongo
+
 #### my Files
 from user import user
-from client_functions import orders
-from keys import TEST_API_KEY, TEST_API_SECRET, API_KEY, API_SECRET
+from keys import TEST_API_KEY, TEST_API_SECRET, API_KEY, API_SECRET, mongo_user, mongo_password
 from client_functions import listener
+from mongodb import mongo_db_conection as mdbc
+"""
 
 def print_user_data(user):
     print("####################### {} ###########################".format(user.user_name))
@@ -37,13 +43,22 @@ def run(user):
     print_user_data(user)
 
 ########### Running starts here ###########
-test = user('Test_758',TEST_API_KEY, TEST_API_SECRET,['USD'])
-marcos = user('Mars_859',API_KEY,API_SECRET,['USD'])
-users = [marcos,test]
+test = user('Test_758', TEST_API_KEY, TEST_API_SECRET, ['USD'],
+            uid = 36363636, mongo_client = mongo_client)
+marcos = user('Mars_859', API_KEY, API_SECRET, ['USD'],
+            uid = 36363636, mongo_client = mongo_client)users = [marcos,test]
+            
 for user in users:
     run(user)
+
+#Creates a pymongo.MongoClient in order to get access to de databases available.
+#The connection is with a web cluster. All users connect to same MongoClient.
+mg_user = mongo_user
+mg_password = mongo_password
+mongo_client = mdbc.mongo_db_conection(mg_user, mg_password, mg_user_info = True)
 
 # runs loop for hourly cancel
 loop = sched.scheduler(time.time, time.sleep)
 loop.enter(60, 1, horly_cancel, (loop,))
 loop.run()
+
