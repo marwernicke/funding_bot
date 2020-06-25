@@ -1,12 +1,3 @@
-#Document information
-document_data = {
-                 'author': 'marwernicke',
-                 'name': 'listener.py',
-                 'description': 'Recieve user notificatinons from bfx',
-                 'version': '1.0.0',
-                 'new_update': 'checho651 conection to monogodb'
-                 }
-
 #Needed packages
 import time
 #pip install pymongo & pip install pymongo[srv] needed for web clusters.
