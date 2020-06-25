@@ -33,7 +33,7 @@ def horly_cancel(loop):
     for user in users:
         print_user_data(user)
         asyncio.run(orders.cancel_all_offers(user))
-    loop.enter(60, 1, horly_cancel, (loop,))
+    loop.enter(3600, 1, horly_cancel, (loop,))
 
 def run(user):
     @user.bfx.ws.on('all')
