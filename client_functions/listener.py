@@ -106,7 +106,7 @@ async def all(notification, user):
                            'timestamp': time.time()*1000,
                            'currency': coin,
                            'balance': balance,
-                           'available': 100,
+                           'available': available,
                            'rate_curr_usd': 1,
                            'format': format
                             }
