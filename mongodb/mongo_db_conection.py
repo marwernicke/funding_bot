@@ -1,13 +1,3 @@
-#Document information
-document_data = {
-                 'author': 'checho651',
-                 'name': 'mongo_db_conection.py',
-                 'description': '''Creates a mongo conection class with Methods
-                                    to update data easily to each Bot_user''',
-                 'version': '2.0.1',
-                 'new_update': 'modify variable names, credit update options.'
-                 }
-
 #Needed packages
 import pymongo
 
