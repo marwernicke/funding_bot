@@ -4,4 +4,3 @@ TEST_API_SECRET=''
 API_KEY=''
 API_SECRET=''
 
-testess
