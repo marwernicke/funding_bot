@@ -12,7 +12,9 @@ async def create_funding(amount,per,rate,coin,user):
       return(None)
 
 async def cancel_all_offers(user):
-    for offer in user.offers:
+    print('canceling offers')
+    offers_to_cancel = user.offers.copy()
+    for offer in offers_to_cancel:
         try:
             response = await user.bfx.rest.submit_cancel_funding_offer(offer)
         except Exception as e:

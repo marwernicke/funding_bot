@@ -24,3 +24,4 @@ class user():
 
         #Creates an instance of the class 'Bot_user' to conect to mongo database
         self.mongo_user = mdbc.Bot_user(client = mongo_client, user_uid = uid)
+
