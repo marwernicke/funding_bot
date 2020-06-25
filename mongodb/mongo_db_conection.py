@@ -1,12 +1,3 @@
-#Document information
-document_data = {
-                 'author': 'checho651',
-                 'name': 'mongo_db_conection.py',
-                 'description': '''Creates a mongo conection class with Methods
-                                    to update data easily to each Bot_user''',
-                 'version': '2.0.0'
-                 }
-
 #Needed packages
 import pymongo
 
@@ -21,14 +12,14 @@ class Bot_user:
         """
         Gets the data of the user from 'users' collection.
         """
-        self.client = client        
+        self.client = client
         self.user_uid = user_uid
         #Checks if conection was successful, gets client data form users_data
         try:
             #Collection where user data is stored.
             self.col_data = self.client.funding_bfx.users
             self.user_data = self.col_data.find_one({'uid': self.user_uid})
-           
+
             #User attributes
             self._id = self.user_data['_id']
             self.name = self.user_data['name']
@@ -39,7 +30,7 @@ class Bot_user:
             self.API_secret = self.user_data['API_secret']
             self.timestamp = self.user_data['timestamp']
             self.start_amount = self.user_data['start_amount']
-            
+
             #Database and collections name where historical data is stored.
             self.db_records = self.client.funding_bfx
             self.col_wallets = self.db_records['walletSnapshots']
@@ -62,13 +53,13 @@ class Bot_user:
             return self.col_data.find_one({'uid': self.user_uid})['is_active']
         except:
             print('Conection with database failed')
-        
+
     def coins(self):
         try:
             return self.col_data.find_one({'uid': self.user_uid})['coins']
         except:
             print('Conection with database failed')
-            
+
     def earnings(self):
         try:
             agg_query = [{'$match': {'uid': self.uid}},
@@ -78,21 +69,21 @@ class Bot_user:
             return total_list
         except:
             print('Conection with database failed')
-            
+
     def current_amount(self):
         try:
             return self.col_data.find_one({'uid': self.user_uid})['current_amount']
         except:
             print('Conection with database failed')
-            
+
     def update_one(self, coin = '', **kwargs):
-        """        
+        """
         Parameters
         ----------
         coin : str
             Currency symbol. Only accepts one value as string.
         **kwargs : TYPE
-            Can update any value from users document. 
+            Can update any value from users document.
 
         Updates values from users document.
 
@@ -115,7 +106,7 @@ class Bot_user:
                                                 {"$push":
                                                     {'coins': coin}
                                                 }
-                                             )                
+                                             )
         except:
             print('Update could not be performed')
 
@@ -128,27 +119,27 @@ class Bot_user:
                 last_update = self.col_wallets.find_one({'uid': self.uid, 'currency': coin},
                                                         sort = [('timestamp', -1)])
                 if last_update:
-                    wallet_dict[coin] = {'amount': last_update['amount'],
+                    wallet_dict[coin] = {'balance': last_update['balance'],
                                            'available': last_update['available']}
                 else:
-                    wallet_dict[coin] = {'amount': 0, 'available': 0}
+                    wallet_dict[coin] = {'balance': 0, 'available': 0}
         except:
             print('Conection failed')
-            
+
         return wallet_dict
 
-    def new_wallet_snapshot (self, doc_data :dict):         
+    def new_wallet_snapshot (self, doc_data :dict):
         try:
             doc_data['uid'] = self.uid
             if doc_data['currency'] not in self.coins():
                 print('Currency is not available in coins, it will be added')
                 self.update_one(coin = doc_data['currency'])
                 print('Currency added to coins successfully')
-            
+
             new_wallet_snapshot (col = self.col_wallets, doc_data = doc_data)
         except:
             print('Conection failed')
-            
+
     def available (self, currency: str):
         try:
             wallet = self.wallet_info()
@@ -178,13 +169,13 @@ class Bot_user:
         offer_data['uid'] = self.uid
         new_offer(self.col_offers, offer_data)
 
-    def offer_status(self, id_offer: int):
-        status = offer_status (col = self.col_offers, id_offer = id_offer)
+    def offer_status(self, offer_id: int):
+        status = offer_status (col = self.col_offers, offer_id = offer_id)
         return status
 
-    def change_offer_status (self, id_offer: int,
+    def change_offer_status (self, offer_id: int,
                          closed_date = None, was_executed = None ):
-        change_offer_status (col = self.col_offers, id_offer = id_offer,
+        change_offer_status (col = self.col_offers, offer_id = offer_id,
                          closed_date = closed_date, was_executed = was_executed)
 
     def open_offers (self):
@@ -197,13 +188,15 @@ class Bot_user:
         credit_data['uid'] = self.uid
         new_credit(self.col_credits, credit_data)
 
-    def credit_status(self, id_credit: int):
-        end_date = credit_status (col = self.col_credits, id_credit = id_credit)
+    def credit_status(self, credit_id: int):
+        end_date = credit_status (col = self.col_credits, credit_id = credit_id)
         return end_date
 
-    def change_credit_status (self, id_credit: int, end_date = None):
-        change_credit_status (col = self.col_credits, id_credit = id_credit,
-                              end_date = end_date)
+    def change_credit_status (self, credit_id: int, end_date = None,
+                              earn_money = None, paid_fees = None):
+        change_credit_status (col = self.col_credits, credit_id = credit_id,
+                              end_date = end_date, earn_money = earn_money,
+                              paid_fees = paid_fees)
 
     def open_credits (self):
         list_open_credits = list(self.col_credits.find({'end_date': 0}))
@@ -213,19 +206,19 @@ class Bot_user:
 #General functions.
 def mongo_db_conection (mongo_user: str, mongo_password: str,
                         mg_user_info = False) -> pymongo.MongoClient:
-    """    
+    """
     Parameters
     ----------
     mongo_user : str
     mongo_password : str
     mg_user_info : TYPE, optional
         The default is False.
-    
+
     Conects to 'FundingBot' cluster by user and password.
     Recieve mongo user and password from connection method 'Connect to your aplication'.
     Returns instance of a class MongoClient.
     Prints a list of databases available and collections if mg_user_info = True.
-            
+
     Returns
     -------
     client : pymongo.MongoClient
@@ -252,14 +245,14 @@ def mongo_db_conection (mongo_user: str, mongo_password: str,
 
 def insert_document (client: pymongo.MongoClient, db_name: str,
                      col_name :str, doc_data :dict):
-    """   
+    """
     Parameters
     ----------
     client : pymongo.MongoClient
     db_name : str
     col_name : str
     doc_data : dict
-    
+
     Inserts doc_data in client.db_name.col_name.
 
     Returns
@@ -285,10 +278,10 @@ def new_bot_user (client: pymongo.MongoClient, user_data: dict):
         Dictionary with keys: ['name', 'surname', 'user_name', 'uid', 'API_key',
                                'API_secret', 'coins', 'timestamp', 'is_active',
                                'start_amount', 'earnings', 'current_amount']
-    
-    Creates new document in db = 'funding_bfx', col = 'users' 
+
+    Creates new document in db = 'funding_bfx', col = 'users'
     with new user data.
-        
+
     Returns
     -------
     None.
@@ -321,7 +314,7 @@ def new_wallet_snapshot (col: pymongo.collection, doc_data :dict):
     Returns
     -------
     None.
-    """        
+    """
     try:
         col.insert_one(doc_data)
     except:
@@ -332,17 +325,17 @@ def new_offer (col: pymongo.collection, offer_data: dict):
     Saves offer data in collection specified.
     """
     try:
-        #Search if offer with id_offer already exists.
+        #Search if offer with offer_id already exists.
         col.insert_one(offer_data)
     except:
         print('Offer could not be saved')
 
-def offer_status (col: pymongo.collection, id_offer: int):
+def offer_status (col: pymongo.collection, offer_id: int):
     """
     Checks status, returns a tuple.
     """
     try:
-        offer = col.find_one({'id_offer': id_offer})
+        offer = col.find_one({'offer_id': offer_id})
         closed_date = offer['closed_date']
         was_executed = offer['was_executed']
         print(f'Offers closed_date value is {closed_date}')
@@ -353,23 +346,23 @@ def offer_status (col: pymongo.collection, id_offer: int):
         status ('Not_Found', 'Not_found')
     return status
 
-def change_offer_status (col: pymongo.collection, id_offer: int,
+def change_offer_status (col: pymongo.collection, offer_id: int,
                          closed_date = None, was_executed = None):
     """
     Changes closed_date and/or was_executed
 
     """
     try:
-        if col.find_one({'id_offer': id_offer}):
+        if col.find_one({'offer_id': offer_id}):
             if closed_date:
-                col.update_one({'id_offer': id_offer},
+                col.update_one({'offer_id': offer_id},
                                     {"$set":
                                         {'closed_date':
                                              closed_date}
                                     }
                                )
             if was_executed:
-                col.update_one({'id_offer': id_offer},
+                col.update_one({'offer_id': offer_id},
                                     {"$set":
                                         {'was_executed':
                                              was_executed}
@@ -389,12 +382,12 @@ def new_credit (col: pymongo.collection, credit_data: dict):
     except:
         print('Credit could not be saved')
 
-def credit_status (col: pymongo.collection, id_credit: int):
+def credit_status (col: pymongo.collection, credit_id: int):
     """
     Checks status, returns a tuple.
     """
     try:
-        credit = col.find_one({'id_credit': id_credit})
+        credit = col.find_one({'credit_id': credit_id})
         end_date = credit['end_date']
         print(f'Offers closed_date value is {end_date}')
         return end_date
@@ -402,18 +395,33 @@ def credit_status (col: pymongo.collection, id_credit: int):
         print('Credit not found')
         return 'Not_Found'
 
-def change_credit_status (col: pymongo.collection, id_credit: int,
-                          end_date = None):
+def change_credit_status (col: pymongo.collection, credit_id: int,
+                          end_date = None, earn_money = None,
+                          paid_fees = None):
     """
     Changes end_date
     """
     try:
-        if col.find_one({'id_credit': id_credit}):
+        if col.find_one({'credit_id': credit_id}):
             if end_date:
-                col.update_one({'id_credit': id_credit},
+                col.update_one({'credit_id': credit_id},
                                     {"$set":
                                         {'end_date':
                                              end_date}
+                                    }
+                               )
+            if earn_money:
+                col.update_one({'credit_id': credit_id},
+                                    {"$set":
+                                        {'earn_money':
+                                             earn_money}
+                                    }
+                               )
+            if paid_fees:
+                col.update_one({'credit_id': credit_id},
+                                    {"$set":
+                                        {'paid_fees':
+                                             paid_fees}
                                     }
                                )
         else:

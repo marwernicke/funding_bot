@@ -17,7 +17,8 @@ def snapshot(coins,user):
     def log_credits(credits):
         user.credits = {}
         user_id = user.user_name
-        for credit in credits:
+        #List of credits is in index 2?
+        for credit in credits[2]:
             credit_id = credit[0]
             coin = credit[1]
             creation_date = credit[3]
