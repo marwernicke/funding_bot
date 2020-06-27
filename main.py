@@ -9,10 +9,9 @@ import pymongo
 
 #### my Files
 from user import user
-from keys import TEST_API_KEY, TEST_API_SECRET, API_KEY, API_SECRET, mongo_user, mongo_password
-from client_functions import listener
+from keys import API_KEY, API_SECRET, mongo_user, mongo_password #TEST_API_KEY, TEST_API_SECRET,
+from client_functions import listener, orders
 from mongodb import mongo_db_conection as mdbc
-"""
 
 def print_user_data(user):
     print("####################### {} ###########################".format(user.user_name))
@@ -49,16 +48,17 @@ mg_user = mongo_user
 mg_password = mongo_password
 mongo_client = mdbc.mongo_db_conection(mg_user, mg_password, mg_user_info = True)
 
-test = user('Test_758', TEST_API_KEY, TEST_API_SECRET, ['USD'],
-            uid = 36363636, mongo_client = mongo_client)
+#test = user('Test_758', TEST_API_KEY, TEST_API_SECRET, ['USD'],
+#            uid = 36363636, mongo_client = mongo_client)
 marcos = user('Mars_859', API_KEY, API_SECRET, ['USD'],
-            uid = 36363636, mongo_client = mongo_client)users = [marcos,test]
-            
-for user in users:
-    run(user)
+            uid = 35353535, mongo_client = mongo_client)
+
+users = [marcos]#,test]
+
+for usr in users:
+    run(usr)
 
 # runs loop for hourly cancel
 loop = sched.scheduler(time.time, time.sleep)
 loop.enter(60, 1, horly_cancel, (loop,))
 loop.run()
-
