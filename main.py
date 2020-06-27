@@ -51,7 +51,9 @@ mongo_client = mdbc.mongo_db_conection(mg_user, mg_password, mg_user_info = True
 test = user('Test_758', TEST_API_KEY, TEST_API_SECRET, ['USD'],
             uid = 36363636, mongo_client = mongo_client)
 marcos = user('Mars_859', API_KEY, API_SECRET, ['USD'],
-            uid = 35353535, mongo_client = mongo_client)users = [marcos,test]
+            uid = 35353535, mongo_client = mongo_client)
+
+users = [marcos,test]
             
 for user in users:
     run(user)
