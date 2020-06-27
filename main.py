@@ -10,9 +10,8 @@ import pymongo
 #### my Files
 from user import user
 from keys import TEST_API_KEY, TEST_API_SECRET, API_KEY, API_SECRET, mongo_user, mongo_password
-from client_functions import listener
+from client_functions import listener, orders
 from mongodb import mongo_db_conection as mdbc
-"""
 
 def print_user_data(user):
     print("####################### {} ###########################".format(user.user_name))
@@ -52,7 +51,7 @@ mongo_client = mdbc.mongo_db_conection(mg_user, mg_password, mg_user_info = True
 test = user('Test_758', TEST_API_KEY, TEST_API_SECRET, ['USD'],
             uid = 36363636, mongo_client = mongo_client)
 marcos = user('Mars_859', API_KEY, API_SECRET, ['USD'],
-            uid = 36363636, mongo_client = mongo_client)users = [marcos,test]
+            uid = 35353535, mongo_client = mongo_client)users = [marcos,test]
             
 for user in users:
     run(user)
