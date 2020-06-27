@@ -18,11 +18,12 @@ def snapshot(coins,user):
         user.credits = {}
         user_id = user.user_name
         #List of credits is in index 2?
-        for credit in credits[2]:
-            credit_id = credit[0]
-            coin = credit[1]
-            creation_date = credit[3]
-            amount = credit[5]
-            rate = credit[11]
-            per = credit[12]
-            user.credits[credit_id] =  {'user_id': user_id, 'credit_id':credit_id, 'creation_date': creation_date, 'coin':coin, 'amount':amount, 'rate':rate, 'per': per, 'end_date':0, 'earn_money':0, 'piad_fees':0 }
+        if credtis:
+            for credit in credits[2]:
+                credit_id = credit[0]
+                coin = credit[1]
+                creation_date = credit[3]
+                amount = credit[5]
+                rate = credit[11]
+                per = credit[12]
+                user.credits[credit_id] =  {'user_id': user_id, 'credit_id':credit_id, 'creation_date': creation_date, 'coin':coin, 'amount':amount, 'rate':rate, 'per': per, 'end_date':0, 'earn_money':0, 'piad_fees':0 }
