@@ -1,6 +1,0 @@
-TEST_API_KEY=''
-TEST_API_SECRET=''
-
-API_KEY=''
-API_SECRET=''
-
