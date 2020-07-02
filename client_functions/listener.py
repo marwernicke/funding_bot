@@ -5,6 +5,7 @@ import pymongo
 
 # my files
 from Strategies import manager
+from client_functions import rest_functions
 
 async def all(notification, user):
     if type(notification) == list:
@@ -93,12 +94,13 @@ async def all(notification, user):
                 user.mongo_user.update_one(coin = coin)
             print('_#_ {} WALLET UPDATE {}'.format(coin, user.wallets[coin]))
             #Connection to data base, new wallet snapshot in 'walletSnapshots' collection.
+            forex_rate = rest_functions.get_exchange_rate(ccy1 = coin, ccy2 = 'USD')
             new_wu_data = {
                            'timestamp': time.time()*1000,
                            'currency': coin,
                            'balance': balance,
                            'available': available,
-                           'rate_curr_usd': 1,
+                           'rate_curr_usd': forex_rate,
                            'format': format
                             }
             user.mongo_user.new_wallet_snapshot(doc_data = new_wu_data)
